@@ -1,0 +1,110 @@
+*,
+*::before,
+*::after {
+  background-color: #F2EAE0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  text-transform: uppercase;
+  color: #82B2C0;
+}
+
+.container {
+  padding: 1rem;
+  max-width: 320px;
+  width: 320px;
+}
+
+.results {
+  border: 0.5px solid #9c9797;
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 1rem;
+  padding: 0.5rem;
+}
+
+.margin,
+.maximum-loss,
+.position-size {
+  display: flex;
+  justify-content: space-between;
+}
+
+#form {
+  margin-top: 1rem;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+}
+
+.label span {
+  border-bottom: 1px dotted #82B2C0;
+  width: fit-content;
+}
+
+.input {
+  border-radius: 0.25rem;
+  border: 0.5px solid #9c9797;
+  box-shadow: 0px 2px 3px -1px rgba(0, 0, 0, 0.1), 0px 1px 0px 0px rgba(25, 28, 33, 0.02), 0px 0px 0px 1px rgba(25, 28, 33, 0.08);
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+}
+
+button {
+  background-color: #82B2C0;
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.25rem;
+  width: 100%;
+}
+
+
+.tooltip {
+  position: relative;
+}
+
+.tooltip:hover .tooltip-text {
+  visibility: visible;
+}
+
+
+.tooltip-text {
+  font-size: 10px;
+  visibility: hidden;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  text-align: center;
+  padding: 10px 5px;
+  border-radius: 6px;
+  position: absolute;
+  top: 100%;
+  left: 110%;
+  z-index: 1;
+  min-width: 150px;
+}
+
+.support {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.logo {
+  height: 2rem;
+  width: 2rem;
+}
+
+.poppins-bold {
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-style: normal;
+}

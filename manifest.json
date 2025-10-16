@@ -1,0 +1,10 @@
+{
+  "name": "Risk Management Calculator",
+  "description": "Stop losing your money mindlessly",
+  "version": "1.0",
+  "manifest_version": 3,
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": "./images/pepe-token.jpeg"
+  }
+}
