@@ -1,10 +1,16 @@
 {
-  "name": "Risk Management Calculator",
-  "description": "Stop losing your money mindlessly",
+  "name": "Riskify",
+  "description": "A simple position size calculator for traders who want to manage risk effectively. It helps you determine your position size, margin, and maximum loss based on your risk level, stop loss, and leverage.",
   "version": "1.0",
   "manifest_version": 3,
+  "icons": {
+    "16": "./images/riskify128.png",
+    "32": "./images/riskify128.png",
+    "48": "./images/riskify128.png",
+    "128": "./images/riskify128.png"
+  },
   "action": {
     "default_popup": "index.html",
-    "default_icon": "./images/pepe-token.jpeg"
+    "default_icon": "./images/riskify128.png"
   }
 }
