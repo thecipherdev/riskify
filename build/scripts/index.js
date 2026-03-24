@@ -1,6 +1,31 @@
 document.addEventListener('DOMContentLoaded', () => {
+    let formState = {
+        capital: 0,
+        sl: 0,
+        risk: 0,
+        leverage: 0,
+    };
+    const debouncedSave = debounce(saveFormData, 500);
+    hydrateUIInput(formState);
     const form = document.getElementById('form');
     form?.addEventListener('submit', handleCalculate);
+    form?.addEventListener('input', e => {
+        const { name, value } = e.target;
+        if (name in formState) {
+            formState[name] = parseFloat(value) || 0;
+        }
+        debouncedSave(formState);
+    });
+    const clearBtn = document.getElementById('clear-btn');
+    clearBtn?.addEventListener('click', () => {
+        formState = { capital: 0, sl: 0, risk: 0, leverage: 0 };
+        const inputs = form?.querySelectorAll('input');
+        inputs?.forEach(input => {
+            input.value = '';
+        });
+        clearFormData();
+        updateUI({ margin: 0, maxLoss: 0, positionSize: 0 });
+    });
     const tooltipMessage = [
         '💡 This is your total trading capital, the full amount in your account available for trading.',
         '💡 The percentage distance from your entry price where the position will automatically close to limit losses',
@@ -17,6 +42,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+function hydrateUIInput(formState) {
+    void loadFormData().then(data => {
+        if (!data.formData)
+            return;
+        const { capital, sl, risk, leverage } = data.formData;
+        const cp = document.querySelector('input[name="capital"]');
+        const stop = document.querySelector('input[name="sl"]');
+        const r = document.querySelector('input[name="risk"]');
+        const lev = document.querySelector('input[name="leverage"]');
+        cp.value = capital || '';
+        stop.value = sl || '';
+        r.value = risk || '';
+        lev.value = leverage || '';
+        formState.capital = parseFloat(capital) || 0;
+        formState.sl = parseFloat(sl) || 0;
+        formState.risk = parseFloat(risk) || 0;
+        formState.leverage = parseFloat(leverage) || 0;
+        const results = calculateRisk(formState);
+        updateUI(results);
+    });
+}
 function handleCalculate(e) {
     e.preventDefault();
     const formValues = getFormValues(e.target);
@@ -26,10 +72,10 @@ function handleCalculate(e) {
     updateUI(results);
 }
 function calculateRisk(values) {
-    const { portfolioAmount, stopLoss, riskLevel, leverage } = values;
-    const riskDecimal = riskLevel / 100;
-    const stopLossDecimal = stopLoss / 100;
-    const maxLoss = portfolioAmount * riskDecimal;
+    const { capital, sl, risk, leverage } = values;
+    const riskDecimal = risk / 100;
+    const stopLossDecimal = sl / 100;
+    const maxLoss = capital * riskDecimal;
     const positionSize = stopLossDecimal > 0 ? maxLoss / stopLossDecimal : 0;
     const margin = leverage > 0 ? positionSize / leverage : 0;
     return { maxLoss, positionSize, margin };
@@ -44,9 +90,9 @@ function getFormValues(form) {
     const formData = new FormData(form);
     const formValues = Object.fromEntries(formData.entries());
     const values = {
-        portfolioAmount: parseFloat(formValues['portfolio-amount']) || 0,
-        stopLoss: parseFloat(formValues['stop-loss']) || 0,
-        riskLevel: parseFloat(formValues['risk-level']) || 0,
+        capital: parseFloat(formValues['capital']) || 0,
+        sl: parseFloat(formValues['sl']) || 0,
+        risk: parseFloat(formValues['risk']) || 0,
         leverage: parseFloat(formValues['leverage']) || 0,
     };
     return values;
@@ -58,5 +104,43 @@ function formatCurrency(val, locale = 'en-US') {
         maximumFractionDigits: 2,
     });
 }
-export {};
+function saveFormData(vals) {
+    try {
+        const { sl, capital, risk, leverage } = vals;
+        void chrome.storage.local.set({
+            formData: {
+                capital: capital || '',
+                sl: sl || '',
+                risk: risk || '',
+                leverage: leverage || '',
+            },
+        });
+    }
+    catch (e) {
+        console.log(e);
+    }
+}
+function loadFormData() {
+    return chrome.storage.local.get('formData');
+}
+function clearFormData() {
+    void chrome.storage.local.set({
+        formData: {
+            capital: '',
+            sl: '',
+            risk: '',
+            leverage: '',
+        },
+    });
+}
+const debounce = (fn, delay) => {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            fn.apply(this, args);
+        }, delay);
+    };
+};
+export { debounce };
 //# sourceMappingURL=index.js.map

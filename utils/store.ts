@@ -1,0 +1,32 @@
+/// <reference types="chrome-types" />
+import type {FormValues} from '@typings/form';
+
+function saveFormData(vals: Partial<FormValues>): void {
+  try {
+    console.log('hello');
+    const {sl, capital, risk, leverage} = vals;
+
+    console.log({
+      sl,
+      capital,
+      risk,
+      leverage,
+    });
+    void chrome.storage.local.set({
+      formData: {
+        capital: capital || '',
+        sl: sl || '',
+        risk: risk || '',
+        leverage: leverage || '',
+      },
+    });
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+function loadFormData() {
+  return chrome.storage.local.get('formData');
+}
+
+export {saveFormData, loadFormData};
