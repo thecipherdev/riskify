@@ -66,6 +66,18 @@ button {
   width: 100%;
 }
 
+.clear-btn {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  width: auto;
+}
+
 
 .tooltip {
   position: relative;

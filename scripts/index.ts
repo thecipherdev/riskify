@@ -1,19 +1,39 @@
-interface FormValues {
-  portfolioAmount: number;
-  stopLoss: number;
-  riskLevel: number;
-  leverage: number;
-}
-
-interface CalculationResult {
-  margin: number;
-  maxLoss: number;
-  positionSize: number;
-}
+import type {FormValues, CalculationResult} from '@typings/form';
 
 document.addEventListener('DOMContentLoaded', () => {
+  let formState: FormValues = {
+    capital: 0,
+    sl: 0,
+    risk: 0,
+    leverage: 0,
+  };
+
+  const debouncedSave = debounce(saveFormData, 500);
+
+  hydrateUIInput(formState);
+
   const form = document.getElementById('form');
   form?.addEventListener('submit', handleCalculate);
+  form?.addEventListener('input', e => {
+    const {name, value} = e.target as HTMLInputElement;
+
+    if (name in formState) {
+      formState[name as keyof FormValues] = parseFloat(value) || 0;
+    }
+
+    debouncedSave(formState);
+  });
+
+  const clearBtn = document.getElementById('clear-btn');
+  clearBtn?.addEventListener('click', () => {
+    formState = {capital: 0, sl: 0, risk: 0, leverage: 0};
+    const inputs = form?.querySelectorAll('input');
+    inputs?.forEach(input => {
+      input.value = '';
+    });
+    clearFormData();
+    updateUI({margin: 0, maxLoss: 0, positionSize: 0});
+  });
 
   const tooltipMessage = [
     '💡 This is your total trading capital, the full amount in your account available for trading.',
@@ -34,6 +54,36 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+function hydrateUIInput(formState: FormValues) {
+  void loadFormData().then(data => {
+    if (!data.formData) return;
+
+    const {capital, sl, risk, leverage} = data.formData;
+
+    const cp = document.querySelector(
+      'input[name="capital"]',
+    ) as HTMLInputElement;
+    const stop = document.querySelector('input[name="sl"]') as HTMLInputElement;
+    const r = document.querySelector('input[name="risk"]') as HTMLInputElement;
+    const lev = document.querySelector(
+      'input[name="leverage"]',
+    ) as HTMLInputElement;
+
+    cp.value = capital || '';
+    stop.value = sl || '';
+    r.value = risk || '';
+    lev.value = leverage || '';
+
+    formState.capital = parseFloat(capital) || 0;
+    formState.sl = parseFloat(sl) || 0;
+    formState.risk = parseFloat(risk) || 0;
+    formState.leverage = parseFloat(leverage) || 0;
+
+    const results = calculateRisk(formState);
+    updateUI(results);
+  });
+}
+
 function handleCalculate(e: SubmitEvent) {
   e.preventDefault();
 
@@ -46,12 +96,12 @@ function handleCalculate(e: SubmitEvent) {
 }
 
 function calculateRisk(values: FormValues): CalculationResult {
-  const {portfolioAmount, stopLoss, riskLevel, leverage} = values;
+  const {capital, sl, risk, leverage} = values;
 
-  const riskDecimal = riskLevel / 100;
-  const stopLossDecimal = stopLoss / 100;
+  const riskDecimal = risk / 100;
+  const stopLossDecimal = sl / 100;
 
-  const maxLoss = portfolioAmount * riskDecimal;
+  const maxLoss = capital * riskDecimal;
   const positionSize = stopLossDecimal > 0 ? maxLoss / stopLossDecimal : 0;
   const margin = leverage > 0 ? positionSize / leverage : 0;
 
@@ -69,14 +119,14 @@ function updateUI(results: CalculationResult): void {
     formatCurrency(results.positionSize);
 }
 
-function getFormValues(form: HTMLFormElement): FormValues | null {
+function getFormValues(form: HTMLFormElement): FormValues {
   const formData = new FormData(form);
   const formValues = Object.fromEntries(formData.entries());
 
   const values: FormValues = {
-    portfolioAmount: parseFloat(formValues['portfolio-amount'] as string) || 0,
-    stopLoss: parseFloat(formValues['stop-loss'] as string) || 0,
-    riskLevel: parseFloat(formValues['risk-level'] as string) || 0,
+    capital: parseFloat(formValues['capital'] as string) || 0,
+    sl: parseFloat(formValues['sl'] as string) || 0,
+    risk: parseFloat(formValues['risk'] as string) || 0,
     leverage: parseFloat(formValues['leverage'] as string) || 0,
   };
 
@@ -90,3 +140,49 @@ function formatCurrency(val: number, locale = 'en-US') {
     maximumFractionDigits: 2,
   });
 }
+
+function saveFormData(vals: Partial<FormValues>): void {
+  try {
+    const {sl, capital, risk, leverage} = vals;
+    void chrome.storage.local.set({
+      formData: {
+        capital: capital || '',
+        sl: sl || '',
+        risk: risk || '',
+        leverage: leverage || '',
+      },
+    });
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+function loadFormData() {
+  return chrome.storage.local.get('formData');
+}
+
+function clearFormData(): void {
+  void chrome.storage.local.set({
+    formData: {
+      capital: '',
+      sl: '',
+      risk: '',
+      leverage: '',
+    },
+  });
+}
+
+const debounce = <F extends (...args: Parameters<F>) => ReturnType<F>>(
+  fn: F,
+  delay: number,
+) => {
+  let timeout: ReturnType<typeof setTimeout>;
+  return function (this: ThisParameterType<F>, ...args: Parameters<F>) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      fn.apply(this, args);
+    }, delay);
+  };
+};
+
+export {debounce};
